@@ -14,6 +14,8 @@ namespace Image_Processing_Project
         private Point cropEnd;
         private Rectangle cropRect;
         private bool isSelecting = false;
+        private bool hasUserSelection = false;
+
 
         private Bitmap originalImage;
         private Bitmap originalImage2;
@@ -25,6 +27,7 @@ namespace Image_Processing_Project
 
         private void Form1_Load(object sender, EventArgs e)
         {
+
             comboBox1.Items.Add("Toplama");
             comboBox1.Items.Add("Çarpma");
             comboBox1.Items.Add("Grayscale");
@@ -41,7 +44,7 @@ namespace Image_Processing_Project
             comboBox1.Items.Add("Sobel Kenar Algılama");
             comboBox1.Items.Add("Gaussian Blur");
             comboBox1.Items.Add("90 Derece Döndür");
-            comboBox1.Items.Add("Yakınlaştır");
+            comboBox1.Items.Add("Yakınlaştır (Seçimle)");
             comboBox1.Items.Add("Parlaklık Artır");
 
 
@@ -49,7 +52,8 @@ namespace Image_Processing_Project
             pictureBox1.MouseDown += PictureBox1_MouseDown;
             pictureBox1.MouseMove += PictureBox1_MouseMove;
             pictureBox1.MouseUp += PictureBox1_MouseUp;
-            pictureBox1.Paint += PictureBox1_Paint; // Dikdörtgeni göstermek için
+            pictureBox1.Paint += PictureBox1_Paint;
+
 
 
         }
@@ -117,7 +121,7 @@ namespace Image_Processing_Project
 
             this.Refresh();
         }
-
+        //---------kare seçimi)
         private void PictureBox1_MouseDown(object sender, MouseEventArgs e)
         {
             isSelecting = true;
@@ -136,20 +140,24 @@ namespace Image_Processing_Project
         private void PictureBox1_MouseUp(object sender, MouseEventArgs e)
         {
             isSelecting = false;
+
+         //   if (comboBox1.SelectedItem == null || comboBox1.SelectedItem.ToString() != "Yakınlaştır (Seçimle)")
+           //     return;
+
+            cropEnd = e.Location;
             cropRect = GetRectangle(cropStart, cropEnd);
 
-            if (cropRect.Width > 0 && cropRect.Height > 0 && originalImage != null)
+            if (hasUserSelection && cropRect.Width > 0 && cropRect.Height > 0 && originalImage != null)
             {
+                MessageBox.Show("Yakınlaştırma başladı");
                 Bitmap source = new Bitmap(pictureBox1.Image);
                 Bitmap cropped = ApplyCropFromRectangle(source, cropRect);
-                pictureBox2.Image = cropped;
-            }
-            else
-            {
-              
+                Bitmap zoomed = ApplyZoomIn(cropped, 2f); // 2x yakınlaştır
+                pictureBox2.Image = zoomed;
+
+                hasUserSelection = false;
             }
         }
-
 
         private void PictureBox1_Paint(object sender, PaintEventArgs e)
         {
@@ -162,7 +170,7 @@ namespace Image_Processing_Project
                 }
             }
         }
-
+        //-----------)
         private Rectangle GetRectangle(Point p1, Point p2)
         {
             int x = Math.Min(p1.X, p2.X);
@@ -260,7 +268,7 @@ namespace Image_Processing_Project
                     Bitmap inputImage = pictureBox2.Image != null ? new Bitmap(pictureBox2.Image) : originalImage;
                     processedImage = ApplyRotate90(inputImage);
                     break;
-                case "Yakınlaştır":
+                case "Yakınlaştır (Seçimle)":
                     processedImage = ApplyZoomIn(originalImage); // 1.5x büyüt
                     break;
 
@@ -942,7 +950,8 @@ namespace Image_Processing_Project
             return zoomedImage;
         }
 
- 
+
+
 
         private Bitmap ApplyCropFromRectangle(Bitmap source, Rectangle rect)
         {
